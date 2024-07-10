@@ -4,6 +4,7 @@ plugins {
 	kotlin("plugin.jpa") version "1.9.24"
 	kotlin("jvm") version "1.9.24"
 	kotlin("plugin.spring") version "1.9.24"
+	kotlin("plugin.serialization") version "1.5.21"
 }
 
 group = "com.switch"
