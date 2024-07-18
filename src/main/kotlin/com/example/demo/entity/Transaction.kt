@@ -11,7 +11,7 @@ import jakarta.persistence.Table
 data class Transaction (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    val id: Long,
     var key: String,
     var type: String
 )

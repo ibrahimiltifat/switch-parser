@@ -13,10 +13,9 @@ class UserController(
 
     // GET /api/users
     @GetMapping("/users")
-    fun transactionController(@RequestBody request: JsonRequestDTO): ResponseEntity<String> {
-        println(request.input)
-        transactionService.parser(request.input)
-        return ResponseEntity.ok("users")
+    fun ResponseEntity(@RequestBody request: JsonRequestDTO): ResponseEntity<List<Map<String,Any?>>> {
+        val response = transactionService.parser(request.input)
+        return ResponseEntity.ok(response)
     }
 
 }
