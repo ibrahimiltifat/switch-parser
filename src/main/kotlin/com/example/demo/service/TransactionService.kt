@@ -39,6 +39,12 @@ class TransactionService(
                             result["$key.$mapKey"] = mapValue
                         }
                     }
+                    else{
+                        var list = getKeys(transaction)
+                        for (l in list){
+                            result[l] = null
+                        }
+                    }
                 }
 
                 "array" -> {
@@ -46,6 +52,12 @@ class TransactionService(
                         val array = getObjOrArrayValue(jsonObject[key]!!.toString(), transaction.id)
                         array.forEach { (arrayKey, arrayValue) ->
                             result["$key$arrayKey"] = arrayValue
+                        }
+                    }
+                    else{
+                        var list = getKeys(transaction)
+                        for (l in list){
+                            result[l] = null
                         }
                     }
                 }
@@ -60,6 +72,8 @@ class TransactionService(
                             "Boolean" -> jsonValue.booleanOrNull
                             else -> null
                         }
+                    } else {
+                        result[key] = null
                     }
                 }
             }
@@ -67,15 +81,38 @@ class TransactionService(
         return result
     }
 
+    fun getKeys(transaction: Transaction): List<String>{
+        var respose = ""
+        var list = mutableListOf<String>()
+        var details = detailRepository.findAllByTransactionKey(transaction)
+        var transactions= details.map { it.transactionVal }
+
+        for(trx in transactions){
+            if(trx.type != "object" && trx.type != "array"){
+                if(transaction.type == "object")
+                    respose = "${transaction.key}.${trx.key}"
+                else
+                    respose = "${transaction.key}0.${trx.key}"
+                list.add(respose)
+            }
+            else{
+                val internalList = getKeys(trx)
+                for(il in internalList){
+                    if(transaction.type == "object")
+                        list.add("${transaction.key}.$il")
+                    else{
+                        list.add("${transaction.key}0.$il")
+                    }
+                }
+            }
+
+        }
+        return  list
+    }
     fun getObjOrArrayValue(json: String, id: Long): Map<String, Any?> {
         val detailList = detailRepository.findAllByTransactionKey(transactionRepository.findById(id).get()) //8
         val transactions = detailList.map { it.transactionVal }
         val jsonElement = Json.parseToJsonElement(json)
-
-        println("details")
-        println(detailList)
-        println("trans")
-        println(transactions)
         return if (jsonElement is JsonArray) {
             if (transactions.get(0).type == "String")
                 parseArray(jsonElement, listOf(transactions.get(0)))
