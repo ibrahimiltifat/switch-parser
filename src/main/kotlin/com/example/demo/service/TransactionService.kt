@@ -40,6 +40,7 @@ class TransactionService(
                         }
                     }
                 }
+
                 "array" -> {
                     if (jsonObject[key] != null) {
                         val array = getObjOrArrayValue(jsonObject[key]!!.toString(), transaction.id)
@@ -48,6 +49,7 @@ class TransactionService(
                         }
                     }
                 }
+
                 else -> {
                     val jsonValue = jsonObject[key]?.jsonPrimitive
                     if (jsonValue != null) {
@@ -66,12 +68,21 @@ class TransactionService(
     }
 
     fun getObjOrArrayValue(json: String, id: Long): Map<String, Any?> {
-        val detailList = detailRepository.findAllByTransactionKey(transactionRepository.findById(id).get())
-        val transactions = detailList.map { transactionRepository.findById(it.transactionVal.id).get() }
+        val detailList = detailRepository.findAllByTransactionKey(transactionRepository.findById(id).get()) //8
+        val transactions = detailList.map { it.transactionVal }
         val jsonElement = Json.parseToJsonElement(json)
 
+        println("details")
+        println(detailList)
+        println("trans")
+        println(transactions)
         return if (jsonElement is JsonArray) {
-            parseArray(jsonElement, transactions)
+            if (transactions.get(0).type == "String")
+                parseArray(jsonElement, listOf(transactions.get(0)))
+            else {
+                val trx = detailRepository.findAllByTransactionKey(transactions.get(0))
+                parseArray(jsonElement, trx.map { it.transactionVal })
+            }
         } else {
             dynamicDeserialize(jsonElement.jsonObject, transactions)
         }
@@ -87,15 +98,30 @@ class TransactionService(
                         arrayResult["$index.$mapKey"] = mapValue
                     }
                 }
+
                 is JsonArray -> {
                     val nestedArray = parseArray(element, transactions)
                     nestedArray.forEach { (nestedKey, nestedValue) ->
                         arrayResult["$index.$nestedKey"] = nestedValue
                     }
                 }
+
                 else -> {
-                    arrayResult["$index"] = element.jsonPrimitive.contentOrNull
+                    if (transactions.size == 1) {
+                        val type = transactions.get(0).type
+                        val jsonValue = element.jsonPrimitive
+                        arrayResult["$index"] = when (type) {
+                            "String" -> jsonValue.content
+                            "Long" -> jsonValue.longOrNull
+                            "Int" -> jsonValue.intOrNull
+                            "Boolean" -> jsonValue.booleanOrNull
+                            else -> null
+                        }
+                    }
                 }
+//                else -> {
+//                    arrayResult["$index"] = element.jsonPrimitive.contentOrNull
+//                }
             }
         }
 

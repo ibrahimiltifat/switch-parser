@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository
 @Repository
 interface DetailRepository :JpaRepository<Detail,Long>{
     fun findAllByTransactionKey(transactionKey: Transaction): List<Detail>
+    fun findByTransactionKey(transactionKey: Transaction): Detail
 }

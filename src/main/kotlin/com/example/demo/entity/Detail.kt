@@ -1,9 +1,11 @@
 package com.example.demo.entity
 
 import jakarta.persistence.*
+import lombok.Data
 
 @Entity
 @Table(name = "detail")
+@Data
 data class Detail(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) val id: Long? = null,
 
