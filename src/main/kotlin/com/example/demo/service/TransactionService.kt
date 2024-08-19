@@ -2,6 +2,7 @@ package com.example.demo.service
 
 import com.example.demo.entity.Transaction
 import com.example.demo.repository.DetailRepository
+import com.example.demo.repository.FieldsetRepository
 import com.example.demo.repository.TransactionRepository
 import kotlinx.serialization.json.*
 import org.springframework.stereotype.Service
@@ -9,12 +10,13 @@ import org.springframework.stereotype.Service
 @Service
 class TransactionService(
     private val transactionRepository: TransactionRepository,
-    private val detailRepository: DetailRepository
+    private val detailRepository: DetailRepository,
+    private val fieldsetRepository: FieldsetRepository
 ) {
 
-    fun parser(json: String): List<Map<String, Any?>> {
-        val list = transactionRepository.findAll()
-        val deserializedData = dynamicDeserialize(Json.parseToJsonElement(json).jsonObject, list)
+    fun parser(json: String, channelId: Long): List<Map<String, Any?>> {
+        val transactions = getTransactionsForChannel(channelId) // Get transactions based on channelId
+        val deserializedData = dynamicDeserialize(Json.parseToJsonElement(json).jsonObject, transactions)
         val response = mutableListOf<Map<String, Any?>>()
         deserializedData.forEach { (key, value) ->
             println("$key: $value")
@@ -22,6 +24,12 @@ class TransactionService(
             response.add(map)
         }
         return response
+    }
+
+    fun getTransactionsForChannel(channelId: Long): List<Transaction> {
+        val fieldSets = fieldsetRepository.findByChannelId(channelId)
+        val transactionIds = fieldSets.map { it.transactionId }
+        return transactionRepository.findAllById(transactionIds)
     }
 
     fun dynamicDeserialize(jsonObject: JsonObject, transactions: List<Transaction>): Map<String, Any?> {

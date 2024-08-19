@@ -12,9 +12,15 @@ class UserController(
 ) {
 
     // GET /api/users
-    @GetMapping("/users")
-    fun ResponseEntity(@RequestBody request: JsonRequestDTO): ResponseEntity<List<Map<String,Any?>>> {
-        val response = transactionService.parser(request.input)
+//    @GetMapping("/users")
+//    fun ResponseEntity(@RequestBody request: JsonRequestDTO): ResponseEntity<List<Map<String,Any?>>> {
+//        val response = transactionService.parser(request.input)
+//        return ResponseEntity.ok(response)
+//    }
+    @PostMapping("/parse")
+    fun parseJson(@RequestBody request: JsonRequestDTO): ResponseEntity<List<Map<String, Any?>>> {
+        val channelId = 1L // Assume channelId is 1 for now, or fetch it dynamically
+        val response = transactionService.parser(request.input, channelId)
         return ResponseEntity.ok(response)
     }
 
